@@ -66,9 +66,13 @@ namespace USB
             //    }).First();
             //return null;
         }
-        private List<DriveInfo> GetConnecetdDrives() {
+        private List<DriveInfo> GetConnecetdDrives()  {
+
+            //if (_oldDrivesList.Count > 0)
+            //    Console.WriteLine("asdads");
+
             return DriveInfo.GetDrives().Where((drive) => {
-                return (drive.IsReady && drive.DriveType == DriveType.Removable && _oldDrivesList.Exists(f =>  _oldDrivesList.Count>0 && f.VolumeLabel == drive.VolumeLabel));
+                return (drive.IsReady && drive.DriveType == DriveType.Removable && (_oldDrivesList==null || !_oldDrivesList.Exists(f => f.VolumeLabel == drive.VolumeLabel)));
             }).ToList();
 
         }
