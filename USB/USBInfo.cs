@@ -29,23 +29,48 @@ namespace USB
             _oldDrivesList = GetConnecetdDrives();
             NewDrive = _newDrive;
         }
-        private DriveInfo GetNewDrive()
+        private void GetNewDrive()
         {
-            if(_oldDrivesList.Count > 0)
-                return GetConnecetdDrives().Where((drive) =>
-                {
-                    bool exists = _oldDrivesList.Exists((oldDrive) =>
-                    {
-                        return oldDrive.Name == drive.Name;
-                    });
-                    return exists ? false : true;
-                }).First();
-            return null;
+            List<DriveInfo> newDrivesList = GetConnecetdDrives();
+
+            if (newDrivesList.Count == 0)
+            {
+                Console.WriteLine("No removable drives connected");
+                _oldDrivesList=newDrivesList;
+                _newDrive = null;
+            }
+            else if (newDrivesList.Count - _oldDrivesList.Count == 1)
+            {
+                _oldDrivesList=newDrivesList;
+                _newDrive=newDrivesList.First();
+ 
+            }
+            else
+            {
+                foreach (DriveInfo drive in _oldDrivesList)
+                    if (newDrivesList.Contains(drive))
+                        newDrivesList.Remove(drive);
+            }    
+            
+
+
+
+            //if(_oldDrivesList.Count > 0)
+            //    return GetConnecetdDrives().Where((drive) =>
+            //    {
+            //        bool exists = _oldDrivesList.Exists((oldDrive) =>
+            //        {
+            //            return oldDrive.Name == drive.Name;
+            //        });
+            //        return exists ? false : true;
+            //    }).First();
+            //return null;
         }
         private List<DriveInfo> GetConnecetdDrives() {
             return DriveInfo.GetDrives().Where((drive) => {
-                return (drive.IsReady && drive.DriveType == DriveType.Removable);
+                return (drive.IsReady && drive.DriveType == DriveType.Removable && _oldDrivesList.Exists(f =>  _oldDrivesList.Count>0 && f.VolumeLabel == drive.VolumeLabel));
             }).ToList();
+
         }
         private void AddRemoveUSBHandler()
         {
@@ -110,20 +135,25 @@ namespace USB
         private void USBInserted(object sender, EventArgs e)
         {
             Console.WriteLine("A USB device inserted");
-            _newDrive = GetNewDrive(); 
-
-            Console.WriteLine("Added USB drive: {0}: {1}", _newDrive.VolumeLabel, _newDrive.RootDirectory);
-            _oldDrivesList = GetConnecetdDrives();
-
-            Console.WriteLine("\nUsb Drives list:\n");
-            foreach (DriveInfo drive in _oldDrivesList)
+            GetNewDrive(); 
+            if ( _newDrive != null)
+                Console.WriteLine("Added USB drive: {0}: {1}", _newDrive.VolumeLabel, _newDrive.RootDirectory);
+                //_oldDrivesList = GetConnecetdDrives();
+            if (_newDrive != null)
             {
-                Console.WriteLine("{0}: {1}\n", drive.VolumeLabel, drive.RootDirectory);
+                Console.WriteLine("\nUsb Drives list:\n");
+                foreach (DriveInfo drive in _oldDrivesList)
+                {
+                    Console.WriteLine("{0}: {1}\n", drive.VolumeLabel, drive.RootDirectory);
+                }
             }
+                
         }
         private void USBRemoved(object sender, EventArgs e)
         {
             Console.WriteLine("A USB device removed");
+
+            _oldDrivesList = GetConnecetdDrives();
         }
     }
 }
